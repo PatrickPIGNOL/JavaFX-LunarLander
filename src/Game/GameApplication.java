@@ -141,7 +141,7 @@ public class GameApplication extends Application
 	
 	public void mLoad()
 	{
-		this.aLander = new Lander(new Image("LunarLander.png"), new Image("LowThrust.png"), new Image("HighTrust.png"));
+		this.aLander = new Lander(new Image("LunarLander.png"), new Image("LowThrust.png"), new Image("HighThrust.png"));
 	    this.mStart();
 	}
 	
