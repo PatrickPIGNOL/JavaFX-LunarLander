@@ -8,6 +8,7 @@ public class Lander
 	private double aX;
 	private double aY;
 	private double aAngle;
+	private double aSpeed;
 	private double aSpeedX;
 	private double aSpeedY;
 	private Image aShip;
@@ -15,10 +16,12 @@ public class Lander
 	private Image aHighThrust;
 	private boolean aIsThrusting;
 	private boolean aThruster;
+	private boolean aIsLanded;
 	
 	public Lander(Image pShip, Image pLowThrust, Image pHighTrust)
 	{
 		this.aIsThrusting = false;
+		this.aSpeed = 3.0;
 		this.aShip = pShip;
 		this.aLowThrust = pLowThrust;
 		this.aHighThrust = pHighTrust;
@@ -59,6 +62,11 @@ public class Lander
 		return this.aSpeedX;
 	}
 	
+	public double mSpeed()
+	{
+		return this.aSpeed;
+	}
+	
 	public void mSpeedX(double pSpeedX)
 	{
 		this.aSpeedX = pSpeedX;
@@ -74,6 +82,16 @@ public class Lander
 		this.aSpeedY = pSpeedY;
 	}
 	
+	public double mWidth()
+	{
+		return this.aShip.getWidth();
+	}
+	
+	public double mHeight()
+	{
+		return this.aShip.getHeight();
+	}
+	
 	public boolean mIsThrusting()
 	{
 		return this.aIsThrusting;
@@ -82,6 +100,16 @@ public class Lander
 	public void mIsThrusting(boolean pIsThrusting)
 	{
 		this.aIsThrusting = pIsThrusting;
+	}
+	
+	public boolean mIsLanded()
+	{
+		return this.aIsLanded;
+	}
+	
+	public void mIsLanded(boolean pIsLanded)
+	{
+		this.aIsLanded = pIsLanded;
 	}
 	
 	public void mUpdate(double pDeltaTime)
@@ -96,6 +124,10 @@ public class Lander
 	
 	public void mDraw(GraphicsContext pGraphicsContext)
 	{
+		pGraphicsContext.save();
+		pGraphicsContext.translate(this.aX, this.aY);
+		pGraphicsContext.rotate(this.aAngle);
+		pGraphicsContext.translate(-this.aX, -this.aY);
 		if(this.aIsThrusting)
 		{
 			this.aThruster = !this.aThruster;
@@ -105,9 +137,10 @@ public class Lander
 			}
 			else
 			{
-				pGraphicsContext.drawImage(this.aLowThrust, this.aX, this.aY);	
+				pGraphicsContext.drawImage(this.aLowThrust, this.aX - (this.aShip.getWidth()/2), this.aY - (this.aShip.getHeight() / 2));	
 			}
 		}
-		pGraphicsContext.drawImage(this.aShip, this.aX, this.aY);
+		pGraphicsContext.drawImage(this.aShip, this.aX - (this.aShip.getWidth()/2), this.aY - (this.aShip.getHeight() / 2));
+		pGraphicsContext.restore();
 	}
 }

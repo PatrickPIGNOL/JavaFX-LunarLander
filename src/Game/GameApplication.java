@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
@@ -33,12 +34,14 @@ public class GameApplication extends Application
 	private double aNanoTime;
 	private double aTime;
 	private Lander aLander;
+	private boolean aTurnLeft;
+	private boolean aTurnRight;
 	
 	@Override
 	public void start(Stage pStage) throws Exception 
 	{
 		this.aStage = pStage;
-	    this.aStage.setTitle("JavaFX : Casse-Briques");	    
+	    this.aStage.setTitle("JavaFX : LunarLander");	    
 		this.aGroup = new Group();
 	    this.aScene = new Scene(this.aGroup);
 	    this.aStage.setScene(this.aScene);
@@ -63,7 +66,7 @@ public class GameApplication extends Application
 	    	{
 	    		public void handle(KeyEvent e)
 	    		{
-	    			
+	    			mOnKeyReleased(e);
 	    		}
 	    	}
 	    );
@@ -104,7 +107,34 @@ public class GameApplication extends Application
 	
 	private void mOnKeyPressed(KeyEvent e)
 	{
-		
+		if(e.getCode()==KeyCode.RIGHT)
+		{
+			this.aTurnRight = true;
+		}
+		if(e.getCode()==KeyCode.LEFT)
+		{
+			this.aTurnLeft = true;
+		}
+		if(e.getCode()==KeyCode.UP)
+		{
+			this.aLander.mIsLanded(false);
+			this.aLander.mIsThrusting(true);
+		}
+	}
+	private void mOnKeyReleased(KeyEvent e)
+	{
+		if(e.getCode()==KeyCode.RIGHT)
+		{
+			this.aTurnRight = false;
+		}
+		if(e.getCode()==KeyCode.LEFT)
+		{
+			this.aTurnLeft = false;
+		}
+		if(e.getCode()==KeyCode.UP)		
+		{
+			this.aLander.mIsThrusting(false);
+		}
 	}
 	
 	private void mLoop(double pCurrentNanoTime)
@@ -117,7 +147,7 @@ public class GameApplication extends Application
 		double vMiliTimePerSeconds = vNanoTimePerSeconds / 1000.0;
 		double vFPS = 120;
 		double vNanoTimePerFPS = vNanoTimePerSeconds / vFPS;
-		this.mUpdate(vDeltaTime/vMiliTimePerSeconds);
+		this.mUpdate(vDeltaTime/vNanoTimePerSeconds);
         // limit acceleration card overheat and CPU usage ...
 		if(this.aFPSTime > vNanoTimePerFPS)
         {
@@ -125,7 +155,7 @@ public class GameApplication extends Application
 	    	this.aGraphicsContext.setFill(Color.BLACK);
 	    	this.aGraphicsContext.fillRect(0.0, 0.0, this.aCanvas.getWidth(), this.aCanvas.getHeight());
 	    	this.mDraw(this.aGraphicsContext);
-			this.mDrawFPS(vDeltaTime);
+			//this.mDrawFPS(vDeltaTime);
 			this.aFPSTime = 0.0;
 		}	
 		
@@ -147,9 +177,8 @@ public class GameApplication extends Application
 	
 	public void mStart()
 	{
-	    this.aLander.mX(this.aCanvas.getWidth()/2);
-	    this.aLander.mY(this.aCanvas.getHeight()/2);
-	    
+	    this.aLander.mX(this.aCanvas.getWidth() / 2.0);
+	    this.aLander.mY(this.aLander.mHeight() / 2.0);
 	}
 	
 	public void mUpdate(double pDeltaTime)
@@ -159,14 +188,66 @@ public class GameApplication extends Application
 	
 	private void mOnUpdate(double pDeltaTime)
 	{
-		this.aLander.mSpeedY(this.aLander.mSpeedY() + (1.62 * pDeltaTime));
+		if(this.aLander.mIsLanded())
+		{
+			this.aLander.mSpeedX(0.0);
+			this.aLander.mSpeedY(0.0);
+			this.aLander.mAngle(0.0);
+		}
+		else
+		{
+			this.aLander.mSpeedY(this.aLander.mSpeedY() + (1.62 * pDeltaTime));
+		}
 		
 		this.aLander.mX(this.aLander.mX() + this.aLander.mSpeedX());
 		this.aLander.mY(this.aLander.mY() + this.aLander.mSpeedY());
+		if(this.aLander.mY() - this.aLander.mHeight() / 2.0 > this.aCanvas.getHeight())
+		{
+			this.aLander.mY(0.0);
+			this.aLander.mSpeedY(0.0);
+		}
+		if(this.aLander.mX() < 0)
+		{
+			this.aLander.mX(this.aCanvas.getWidth());
+		}
+		if(this.aLander.mX() > this.aCanvas.getWidth())
+		{
+			this.aLander.mX(0.0);
+		}
+		
+		if(this.aLander.mIsThrusting())
+		{
+			double vRadians = Math.toRadians(this.aLander.mAngle() - 90);
+			double vForceX = Math.cos(vRadians) * this.aLander.mSpeed() * pDeltaTime;
+			double vForceY = Math.sin(vRadians) * this.aLander.mSpeed() * pDeltaTime;
+			this.aLander.mSpeedX(this.aLander.mSpeedX() + vForceX);
+			this.aLander.mSpeedY(this.aLander.mSpeedY() + vForceY);
+		}
+		if(this.aTurnLeft)
+		{
+			this.aLander.mAngle(this.aLander.mAngle() - (10 * pDeltaTime));
+		}
+		if(this.aTurnRight)
+		{
+			this.aLander.mAngle(this.aLander.mAngle() + (10 * pDeltaTime));
+		}
+		if(this.aLander.mY() > this.aCanvas.getHeight())
+		{
+			if((this.aLander.mSpeedY() < 0.5) && (this.aLander.mSpeedX() < 0.5) && (Math.abs(this.aLander.mAngle() % 360) < 2))
+			{
+				this.aLander.mIsLanded(true);
+				this.aLander.mY(this.aCanvas.getHeight());
+			}
+		}
 	}
 	
 	public void mDraw(GraphicsContext pGraphicsContext)
 	{
+		Font vFont = Font.font( "Times New Roman", FontWeight.BOLD, 14 );
+		this.mDrawText(20, 20, vFont, "SpeedX = " + this.aLander.mSpeedX(), 0.0, Color.GREEN, Color.GREEN);
+		this.mDrawText(20, 40, vFont, "SpeedY = " + this.aLander.mSpeedY(), 0.0, Color.GREEN, Color.GREEN);
+		this.mDrawText(20, 60, vFont, "Angle =" + this.aLander.mAngle(), 0.0, Color.GREEN, Color.GREEN);
+		//this.mDrawText(20, 80, vFont, "Y =" + this.aLander.mY(), 0.0, Color.GREEN, Color.GREEN);
 	    this.aLander.mDraw(pGraphicsContext);
 	}
 	
