@@ -239,6 +239,7 @@ public class GameApplication extends Application
 				this.aLander.mY(this.aCanvas.getHeight());
 			}
 		}
+		
 	}
 	
 	public void mDraw(GraphicsContext pGraphicsContext)
